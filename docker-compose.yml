@@ -10,22 +10,13 @@ services:
     ports:
       - "3000:3000"
     command: [ "npm", "start" ]
-  webserver2:
-    image: node22
-    networks:
-      - project-network
-    volumes:
-      - project-volume:/projects
-    ports:
-      - "3001:3000"
-    command: [ "npm", "start" ]
 
 volumes:
   project-volume:
     external: true
-    name: car-game-volume
+    name: ${VOLUME_NAME}
 
 networks:
   project-network:
     external: true
-    name: car-game-net
+    name: ${NETWORK_NAME}
