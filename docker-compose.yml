@@ -3,13 +3,15 @@ version: '3.0'
 services:
   webserver:
     image: node22
+    build:
+      context: ${WORKING_DIR}
     networks:
       - project-network
     volumes:
       - project-volume:/projects
     ports:
       - "3000:3000"
-    command: [ "npm", "start" ]
+    command: [ "./install-and-run.sh" ]
 
 volumes:
   project-volume:

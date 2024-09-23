@@ -18,6 +18,4 @@ RUN apk --no-cache add curl
 
 RUN npm install -g typescript@5.6.2
 
-COPY . /projects
-
-WORKDIR /projects/miproyecto
+WORKDIR /projects/client
