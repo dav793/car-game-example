@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader, GLTF } from 'three/addons/loaders/GLTFLoader.js';
 
 import { Engine } from './engine.js';
+import { GizmoHelper } from '../shared/util/util.js';
+import { Car, CarBuilder } from '../modules/car/car.js';
 
 export class Scene {
 
@@ -46,82 +47,17 @@ export class Scene {
         this.ambientLight = new THREE.AmbientLight( 0xffffff, 1 );
         this.scene.add( this.ambientLight );
 
-        this.createCoordinateGizmo();
+        const coordinateGizmo = GizmoHelper.CreateCoordinateGizmo();
+        this.scene.add( coordinateGizmo );
         
-        const car = await this.loadCarModel();
-        this.scene.add( car );
+        await this.loadCarModel();
     }
+    
+    async loadCarModel(): Promise<void> {
 
-    createCoordinateGizmo() {
+        const car: Car = await new CarBuilder( 'assets/models/car.glb' ).build();
+        this.scene.add( car.group );
 
-        const geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
-    
-        const xMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const xMesh = new THREE.Mesh( geometry, xMaterial );
-        xMesh.position.set( 5, 0, 0 );
-        this.scene.add( xMesh );
-    
-        const yMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const yMesh = new THREE.Mesh( geometry, yMaterial );
-        yMesh.position.set( 0, 5, 0 );
-        this.scene.add( yMesh );
-    
-        const zMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-        const zMesh = new THREE.Mesh( geometry, zMaterial );
-        zMesh.position.set( 0, 0, 5 );
-        this.scene.add( zMesh );
-    }
-    
-    async loadGLTF(url: string): Promise<GLTF> {
-    
-        const loader = new GLTFLoader();
-        const asset: GLTF = await loader.loadAsync( url );
-        return asset;    
-    }
-    
-    async loadCarModel(): Promise<THREE.Group> {
-    
-        const gltf = await this.loadGLTF( 'assets/models/car.glb' );
-        const carGroup = new THREE.Group();
-        
-        const carBodyMesh = gltf.scene.children[0].clone();
-        carGroup.add( carBodyMesh );
-        
-        const carWheelFLMesh = gltf.scene.children[1].clone();
-        carWheelFLMesh.position.set( 
-            0.51452,
-            0.319039,
-            -0.81019
-        );
-        carGroup.add( carWheelFLMesh );
-    
-        const carWheelFRMesh = gltf.scene.children[1].clone();
-        carWheelFRMesh.position.set( 
-            -0.51452,
-            0.319039,
-            -0.81019
-        );
-        carWheelFRMesh.rotateY( THREE.MathUtils.degToRad( 180 ) );
-        carGroup.add( carWheelFRMesh );
-    
-        const carWheelRLMesh = gltf.scene.children[1].clone();
-        carWheelRLMesh.position.set( 
-            0.51452,
-            0.319039,
-            0.807314
-        );
-        carGroup.add( carWheelRLMesh );
-    
-        const carWheelRRMesh = gltf.scene.children[1].clone();
-        carWheelRRMesh.position.set( 
-            -0.51452,
-            0.319039,
-            0.807314
-        );
-        carWheelRRMesh.rotateY( THREE.MathUtils.degToRad( 180 ) );
-        carGroup.add( carWheelRRMesh );
-    
-        return carGroup;
     }
 
 }

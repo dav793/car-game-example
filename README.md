@@ -57,7 +57,7 @@
     docker exec -it car-game-example-webserver-1 /bin/sh
     ```
 
-## Desinstalar
+## Desinstalar  
 
 Mac OS / Linux:
 ```bash
