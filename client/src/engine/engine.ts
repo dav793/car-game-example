@@ -1,3 +1,4 @@
+import { Subject, BehaviorSubject, filter, withLatestFrom, map, tap } from 'rxjs';
 import * as THREE from 'three';
 
 import { EVENT_TYPE, EventManager } from './events/event.js';
@@ -8,6 +9,15 @@ export class Engine {
     eventManager: EventManager;
     renderer: THREE.WebGLRenderer;
     scene: Scene;
+
+    keyboardEvents$ = new Subject<{
+        type: 'keydown' | 'keyup',
+        payload: KeyboardEvent
+    }>();
+    latestKeyboardEvents$ = new BehaviorSubject<{
+        type: 'keydown' | 'keyup',
+        payload: KeyboardEvent
+    }>( undefined );
 
     get width() { return this.config.width; }
     get height() { return this.config.height; }
@@ -31,6 +41,7 @@ export class Engine {
 
         this.eventManager = new EventManager();
         this.listenBrowserEvents();
+        this.listenKeyboardEvents();
 
         // como escuchar
         this.eventManager.on( EVENT_TYPE.THROTTLE ) 
@@ -58,6 +69,41 @@ export class Engine {
         this.renderer.setSize( width, height );
     }
 
+    listenKeyboardEvents() {
+
+        this.keyboardEvents$.pipe(
+            filter( event => event.type === 'keyup' )
+        ).subscribe( event => this.latestKeyboardEvents$.next( event ) );
+
+        this.keyboardEvents$.pipe(
+            filter( event => event.type === 'keydown' && event.payload.code === 'KeyW' ),
+            withLatestFrom(
+                this.latestKeyboardEvents$.pipe(
+                    filter( ev => !ev || ev.payload.code === 'KeyW' )
+                )
+            ),
+            filter(([ source, last ]) => !last || last.type === 'keyup'),
+            map(([ source, last ]) => source)
+        ).subscribe(source => {
+
+            this.latestKeyboardEvents$.next( source );
+
+            this.eventManager.push(EVENT_TYPE.THROTTLE, {
+                isPressed: true
+            });
+        });
+
+        this.keyboardEvents$.pipe(
+            filter( event => event.type === 'keyup' && event.payload.code === 'KeyW' )
+        ).subscribe(event => {
+
+            this.eventManager.push(EVENT_TYPE.THROTTLE, {
+                isPressed: false
+            });
+        });
+
+    }
+
     listenBrowserEvents() {
 
         window.addEventListener( 'keydown', event => {
@@ -66,8 +112,10 @@ export class Engine {
 
                 case 'KeyW':
                     // como emitir
-                    this.eventManager.push(EVENT_TYPE.THROTTLE, {
-                        isPressed: true
+
+                    this.keyboardEvents$.next({
+                        type: 'keydown',
+                        payload: event
                     });
                     break;
 
@@ -88,8 +136,10 @@ export class Engine {
 
                 case 'KeyW':
                     // como emitir
-                    this.eventManager.push(EVENT_TYPE.THROTTLE, {
-                        isPressed: false
+
+                    this.keyboardEvents$.next({
+                        type: 'keyup',
+                        payload: event
                     });
                     break;
 

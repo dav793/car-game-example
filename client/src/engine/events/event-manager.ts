@@ -10,6 +10,7 @@ export class EventManager {
 
     constructor() {}
 
+    // listen events
     // detect event class (C) through inference, based on event type (T) 
     on<
         T extends EventType,
@@ -20,6 +21,7 @@ export class EventManager {
         ) as Observable<C>;
     }
 
+    // emit events
     // detect event class (C) through inference, based on event type (T) 
     push<
         T extends EventType, 
