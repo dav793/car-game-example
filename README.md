@@ -3,6 +3,13 @@
 
 ## Instalar con Docker Compose
 
+* Hacer build de imagen de docker
+    
+    Mac OS / Linux / Windows:
+    ```bash
+    docker build -t node22 .
+    ```
+
 * Copiar archivos de configuracion (la primera vez)
 
     Mac OS / Linux:

@@ -1,8 +1,9 @@
-import { Subject, BehaviorSubject, filter, withLatestFrom, map, tap } from 'rxjs';
+import { Subject, BehaviorSubject, filter, withLatestFrom, map, tap, of, from } from 'rxjs';
 import * as THREE from 'three';
 
 import { EVENT_TYPE, EventManager } from './events/event.js';
 import { Scene } from './scene.js';
+import { WithLast } from '../shared/operators/with-last.js';
 
 export class Engine {
 
@@ -14,10 +15,6 @@ export class Engine {
         type: 'keydown' | 'keyup',
         payload: KeyboardEvent
     }>();
-    latestKeyboardEvents$ = new BehaviorSubject<{
-        type: 'keydown' | 'keyup',
-        payload: KeyboardEvent
-    }>( undefined );
 
     get width() { return this.config.width; }
     get height() { return this.config.height; }
@@ -72,28 +69,6 @@ export class Engine {
     listenKeyboardEvents() {
 
         this.keyboardEvents$.pipe(
-            filter( event => event.type === 'keyup' )
-        ).subscribe( event => this.latestKeyboardEvents$.next( event ) );
-
-        this.keyboardEvents$.pipe(
-            filter( event => event.type === 'keydown' && event.payload.code === 'KeyW' ),
-            withLatestFrom(
-                this.latestKeyboardEvents$.pipe(
-                    filter( ev => !ev || ev.payload.code === 'KeyW' )
-                )
-            ),
-            filter(([ source, last ]) => !last || last.type === 'keyup'),
-            map(([ source, last ]) => source)
-        ).subscribe(source => {
-
-            this.latestKeyboardEvents$.next( source );
-
-            this.eventManager.push(EVENT_TYPE.THROTTLE, {
-                isPressed: true
-            });
-        });
-
-        this.keyboardEvents$.pipe(
             filter( event => event.type === 'keyup' && event.payload.code === 'KeyW' )
         ).subscribe(event => {
 
@@ -102,6 +77,18 @@ export class Engine {
             });
         });
 
+        this.keyboardEvents$.pipe(
+            new WithLast().filter( event => event.payload.code === 'KeyW' ),
+            filter(([event, last]) => {
+                return  event.type === 'keydown' && 
+                        (!last || last.type === 'keyup');
+            })
+        ).subscribe(event => {
+
+            this.eventManager.push(EVENT_TYPE.THROTTLE, {
+                isPressed: true
+            });
+        });
     }
 
     listenBrowserEvents() {
