@@ -4,17 +4,21 @@ import { GLTF } from 'three/addons/loaders/GLTFLoader.js';
 
 import { LoaderHelper } from '../../shared/util/loader-helper.js';
 import { Car } from './car.js';
+import { Scene } from '../../engine/scene.js';
 
 export class CarBuilder {
 
     private car: Car;
     private gltf: GLTF;
+    private scene: Scene;
 
-    constructor(private modelUrl: string) {}
+    constructor(private modelUrl: string, scene: Scene) {
+        this.scene = scene;
+    }
 
     async build(): Promise<Car> {
 
-        this.car = new Car();
+        this.car = new Car( this.scene );
 
         ( await this.loadGLTF( this.modelUrl ) )
             .createModel();

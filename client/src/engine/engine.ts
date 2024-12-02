@@ -7,6 +7,7 @@ import { WithLast } from '../shared/operators/with-last.js';
 
 export class Engine {
 
+    clock: THREE.Clock;
     eventManager: EventManager;
     renderer: THREE.WebGLRenderer;
     scene: Scene;
@@ -26,6 +27,8 @@ export class Engine {
         devicePixelRatio: number
     }) {
         
+        this.clock = new THREE.Clock();
+
         this.renderer = new THREE.WebGLRenderer({
             alpha: true,
             antialias: true
@@ -41,10 +44,10 @@ export class Engine {
         this.listenKeyboardEvents();
 
         // como escuchar
-        this.eventManager.on( EVENT_TYPE.THROTTLE ) 
-            .subscribe(ev => {
-                console.log(ev);
-            });
+        // this.eventManager.on( EVENT_TYPE.THROTTLE ) 
+        //     .subscribe(ev => {
+        //         console.log(ev);
+        //     });
     }
 
     setScene(scene: Scene) {
