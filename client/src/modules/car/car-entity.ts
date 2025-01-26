@@ -8,9 +8,9 @@ import { Scene } from '../../engine/scene.js';
 export class Car {
 
     position: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
-    direction: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
-    acceleration: number = 0;
-    velocity: number = 0;
+    direction: THREE.Vector3 = new THREE.Vector3(0, 0, 0);  // unit vector
+    velocity: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
+    acceleration: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
 
     isThrottling: boolean;
     isBraking: boolean;
@@ -27,6 +27,7 @@ export class Car {
         };
         this.scene = scene;
 
+        // set car in forward direction
         this.direction.set(0, 0, 1);
     }
 
@@ -45,39 +46,32 @@ export class Car {
 
     updatePhysics(elapsedTime: number) {
 
-        if ( this.isThrottling ) {
-            const accelDelta = CONFIG.DELTA_ACCELERATION * elapsedTime;
+        // https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
 
-            if ( this.acceleration + accelDelta <= CONFIG.MAX_ACCELERATION )
-                this.acceleration += accelDelta;
-        }
-        else {
-            const accelDelta = CONFIG.DRAG * elapsedTime;
-
-            if ( this.acceleration - accelDelta >= -CONFIG.MAX_ACCELERATION )
-                this.acceleration -= accelDelta;
-            else
-                this.acceleration = -CONFIG.MAX_ACCELERATION;
-        }
-
-        const velDelta = this.acceleration * elapsedTime;
-        if ( 
-            this.velocity + velDelta <= CONFIG.MAX_VELOCITY &&
-            this.velocity + velDelta >= -CONFIG.MAX_VELOCITY
-        )
-            this.velocity += velDelta;
-
-        const deltaPosition = new THREE.Vector3(
-            this.direction.x,
-            this.direction.y, 
-            this.direction.z
-        ).multiplyScalar( this.velocity );
-
-        this.position.set(
-            this.position.x + deltaPosition.x,
-            this.position.y + deltaPosition.y,
-            this.position.z + deltaPosition.z
+        const fTraction: THREE.Vector3 = this.direction.clone().multiplyScalar(
+            this.isThrottling ? CONFIG.ENGINE_FORCE : 0
         );
+
+        const fDrag: THREE.Vector3 = this.velocity.clone().multiplyScalar(
+            -CONFIG.DRAG * this.velocity.length()
+        );
+        
+        const fRollingResistance: THREE.Vector3 = this.velocity.clone().multiplyScalar(
+            -CONFIG.ROLLING_RESISTANCE
+        );
+
+        const fLong = fTraction.clone().add( fDrag ).add( fRollingResistance );
+
+        this.acceleration = fLong.clone().multiplyScalar( 1 / CONFIG.CAR_MASS );
+
+        this.velocity.add(
+            this.acceleration.clone().multiplyScalar( elapsedTime )
+        );
+
+        this.position.add(
+            this.velocity.clone().multiplyScalar( elapsedTime )
+        );
+
     }
 
     showDirectionGizmo() {

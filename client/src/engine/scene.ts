@@ -43,7 +43,7 @@ export class Scene {
         this.camera = new THREE.PerspectiveCamera(
             45, this.engine.width / this.engine.height, 0.1, 100
         );
-        this.camera.position.set( 0, 20, 40 );
+        this.camera.position.set( -20, 20, 40 );
         this.camera.lookAt( 0, 0, 0 );
         this.scene.add( this.camera );
         
@@ -65,7 +65,7 @@ export class Scene {
     
     async loadCarModel(): Promise<void> {
 
-        this.car = await new CarBuilder( 'assets/models/car.glb', this ).build();
+        this.car = await new CarBuilder( '/assets/models/car.glb', this ).build();
         this.scene.add( this.car.group );
 
         this.car.showDirectionGizmo();

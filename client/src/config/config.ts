@@ -1,7 +1,8 @@
 
 export const CONFIG = {
-    DRAG: 0.1,
-    DELTA_ACCELERATION: 0.05,
-    MAX_ACCELERATION: 0.25,
-    MAX_VELOCITY: 0.5,
+    ENGINE_FORCE: 100,
+    DRAG: 0.84,
+    ROLLING_RESISTANCE: 25.6,
+    BRAKING_FORCE: 1,
+    CAR_MASS: 10
 } as const;
