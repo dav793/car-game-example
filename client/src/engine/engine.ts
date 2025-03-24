@@ -1,7 +1,7 @@
 import { Subject, BehaviorSubject, filter, withLatestFrom, map, tap, of, from } from 'rxjs';
 import * as THREE from 'three';
 
-import { EVENT_TYPE, EventManager } from './events/event.js';
+import { EVENT_TYPE, EventManager, BaseEvent, DistinctEvent, EventType } from './events/event.js';
 import { Scene } from './scene.js';
 import { WithLast } from '../shared/operators/with-last.js';
 
@@ -69,26 +69,78 @@ export class Engine {
         this.renderer.setSize( width, height );
     }
 
-    listenKeyboardEvents() {
+    registerKeyUpEvent(keycode: string, handler: () => void) {
 
         this.keyboardEvents$.pipe(
-            filter( event => event.type === 'keyup' && event.payload.code === 'KeyW' )
-        ).subscribe(event => {
+            filter( keyboardEvent => keyboardEvent.type === 'keyup' && keyboardEvent.payload.code === keycode )
+        ).subscribe(keyboardEvent => handler());
+    }
 
+    registerKeyDownEvent(keycode: string, handler: () => void) {
+
+        this.keyboardEvents$.pipe(
+            new WithLast().filter( event => event.payload.code === keycode ),
+            filter(([event, last]) => {
+                return  event.type === 'keydown' && 
+                        (!last || last.type === 'keyup');   // necesario para que no repita el evento al dejar presionado
+            })
+        ).subscribe(() => handler());
+    }
+
+    listenKeyboardEvents() {
+
+        // W
+        this.registerKeyUpEvent('KeyW', () => {
             this.eventManager.push(EVENT_TYPE.THROTTLE, {
                 isPressed: false
             });
         });
 
-        this.keyboardEvents$.pipe(
-            new WithLast().filter( event => event.payload.code === 'KeyW' ),
-            filter(([event, last]) => {
-                return  event.type === 'keydown' && 
-                        (!last || last.type === 'keyup');
-            })
-        ).subscribe(event => {
-
+        this.registerKeyDownEvent('KeyW', () => {
             this.eventManager.push(EVENT_TYPE.THROTTLE, {
+                isPressed: true
+            });
+        });
+
+        // S
+        this.registerKeyUpEvent('KeyS', () => {
+            this.eventManager.push(EVENT_TYPE.BRAKE, {
+                isPressed: false
+            });
+        });
+
+        this.registerKeyDownEvent('KeyS', () => {
+            this.eventManager.push(EVENT_TYPE.BRAKE, {
+                isPressed: true
+            });
+        });
+
+        // A
+        this.registerKeyUpEvent('KeyA', () => {
+            this.eventManager.push(EVENT_TYPE.STEER, {
+                direction: 'left',
+                isPressed: false
+            });
+        });
+
+        this.registerKeyDownEvent('KeyA', () => {
+            this.eventManager.push(EVENT_TYPE.STEER, {
+                direction: 'left',
+                isPressed: true
+            });
+        });
+
+        // D
+        this.registerKeyUpEvent('KeyD', () => {
+            this.eventManager.push(EVENT_TYPE.STEER, {
+                direction: 'right',
+                isPressed: false
+            });
+        });
+
+        this.registerKeyDownEvent('KeyD', () => {
+            this.eventManager.push(EVENT_TYPE.STEER, {
+                direction: 'right',
                 isPressed: true
             });
         });
@@ -98,50 +150,18 @@ export class Engine {
 
         window.addEventListener( 'keydown', event => {
 
-            switch ( event.code ) {
-
-                case 'KeyW':
-                    // como emitir
-
-                    this.keyboardEvents$.next({
-                        type: 'keydown',
-                        payload: event
-                    });
-                    break;
-
-                case 'KeyA':
-                    break;
-
-                case 'KeyS':
-                    break;
-
-                case 'KeyD':
-                    break;
-            }
+            this.keyboardEvents$.next({
+                type: 'keydown',
+                payload: event
+            });
         } );
 
         window.addEventListener( 'keyup', event => {
 
-            switch ( event.code ) {
-
-                case 'KeyW':
-                    // como emitir
-
-                    this.keyboardEvents$.next({
-                        type: 'keyup',
-                        payload: event
-                    });
-                    break;
-
-                case 'KeyA':
-                    break;
-
-                case 'KeyS':
-                    break;
-
-                case 'KeyD':
-                    break;
-            }
+            this.keyboardEvents$.next({
+                type: 'keyup',
+                payload: event
+            });
         } );
 
     }

@@ -70,15 +70,28 @@ export class Scene {
 
         this.car.showDirectionGizmo();
 
+        // this.engine.eventManager.eventStream
+        //     .subscribe(event => console.log(event));
+
         this.engine.eventManager.on( EVENT_TYPE.THROTTLE )
             .subscribe(event => {
 
-                console.log(event);
                 if ( event.isPressed )
                     this.car.isThrottling = true;
                 else
                     this.car.isThrottling = false;
             });
+
+        this.engine.eventManager.on( EVENT_TYPE.BRAKE )
+            .subscribe(event => {
+
+                if ( event.isPressed )
+                    this.car.isBraking = true;
+                else
+                    this.car.isBraking = false;
+            });
+
+
 
         // interval(10).pipe(
         //     take(500)

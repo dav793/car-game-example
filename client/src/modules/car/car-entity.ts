@@ -12,6 +12,8 @@ export class Car {
     velocity: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
     acceleration: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
 
+    longitudinalForce: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
+
     isThrottling: boolean;
     isBraking: boolean;
 
@@ -48,21 +50,9 @@ export class Car {
 
         // https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
 
-        const fTraction: THREE.Vector3 = this.direction.clone().multiplyScalar(
-            this.isThrottling ? CONFIG.ENGINE_FORCE : 0
-        );
+        this.updateLongitudinalForce();
 
-        const fDrag: THREE.Vector3 = this.velocity.clone().multiplyScalar(
-            -CONFIG.DRAG * this.velocity.length()
-        );
-        
-        const fRollingResistance: THREE.Vector3 = this.velocity.clone().multiplyScalar(
-            -CONFIG.ROLLING_RESISTANCE
-        );
-
-        const fLong = fTraction.clone().add( fDrag ).add( fRollingResistance );
-
-        this.acceleration = fLong.clone().multiplyScalar( 1 / CONFIG.CAR_MASS );
+        this.acceleration = this.longitudinalForce.clone().multiplyScalar( 1 / CONFIG.CAR_MASS );
 
         this.velocity.add(
             this.acceleration.clone().multiplyScalar( elapsedTime )
@@ -72,6 +62,32 @@ export class Car {
             this.velocity.clone().multiplyScalar( elapsedTime )
         );
 
+    }
+
+    updateLongitudinalForce() {
+
+        let fTraction;
+        if ( this.isBraking ) {
+            fTraction = this.direction.clone().applyAxisAngle( 
+                new THREE.Vector3( 0, 1, 0 ), 
+                THREE.MathUtils.degToRad( 180 ) 
+            ).multiplyScalar( CONFIG.BRAKING_FORCE );
+        }
+        else {
+            fTraction = this.direction.clone().multiplyScalar(
+                this.isThrottling ? CONFIG.ENGINE_FORCE : 0
+            );
+        }
+
+        const fDrag = this.velocity.clone().multiplyScalar(
+            -CONFIG.DRAG * this.velocity.length()
+        );
+        
+        const fRollingResistance = this.velocity.clone().multiplyScalar(
+            -CONFIG.ROLLING_RESISTANCE
+        );
+
+        this.longitudinalForce = fTraction.clone().add( fDrag ).add( fRollingResistance );
     }
 
     showDirectionGizmo() {

@@ -1,4 +1,4 @@
-import { Observable, map } from 'rxjs';
+import { Observable, map, filter } from 'rxjs';
 
 export class WithLast {
 
@@ -26,12 +26,16 @@ export class WithLast {
             return src.pipe(
                 map(srcValue => {
 
+                    if ( !predicate( srcValue ) )
+                        return;
+
                     const lastValue = this.lastValue;
-                    if ( predicate( srcValue ) )
-                        this.lastValue = srcValue;
+                    this.lastValue = srcValue;
 
                     return [ srcValue, lastValue ];
-                })
+                }),
+                filter(val => !!val),
+                map(val => val as [T, T])
             );
 
         }

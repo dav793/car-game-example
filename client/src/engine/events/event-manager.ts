@@ -1,6 +1,7 @@
 
 import { Subject, Observable, filter } from 'rxjs';
 
+import { MakeOptional } from '../../shared/util/type.js';
 import { EventType, DistinctEvent, BaseEvent } from './event.js';
 
 export class EventManager {
@@ -26,7 +27,7 @@ export class EventManager {
     push<
         T extends EventType, 
         C extends DistinctEvent<T>
-    >(type: T, event: Omit<C, 'type'>): void {
+    >(type: T, event: MakeOptional<C, 'type'>): void {
         this._eventStream.next({
             ...event,
             type
