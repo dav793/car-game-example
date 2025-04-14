@@ -16,6 +16,8 @@ export class Car {
 
     isThrottling: boolean;
     isBraking: boolean;
+    isSteering: boolean;
+    steerDirection: 'left'|'right';
 
     group: THREE.Group;
     gizmos: {
@@ -35,6 +37,7 @@ export class Car {
 
     update(elapsedTime: number) {
 
+        this.updateWheels( elapsedTime );
         this.updatePhysics( elapsedTime );
 
         this.group.position.set(
@@ -90,6 +93,79 @@ export class Car {
         this.longitudinalForce = fTraction.clone().add( fDrag ).add( fRollingResistance );
     }
 
+    updateWheels(elapsedTime: number) {
+        this.updateFrontWheel('L');
+        // this.updateFrontWheel('R');
+    }
+
+    updateFrontWheel(side: 'L'|'R') {
+
+        const wheel = this.getWheelModel( `F${ side }` );
+
+        if ( this.isSteering ) {
+            
+            const rotation = CONFIG.STEER_RATE * (this.steerDirection === 'left' ? 1 : -1); 
+            wheel.rotateY( rotation );
+
+        }
+        else {
+
+        }
+
+        const wheelAngle = this.getWheelSteerAngle( side );
+//         console.log(`
+// WHEEL ANGLE: ${ THREE.MathUtils.radToDeg( wheelAngle ).toFixed(2) }
+// X: ${ THREE.MathUtils.radToDeg( wheel.rotation.x ).toFixed(2) }
+// Y: ${ THREE.MathUtils.radToDeg( wheel.rotation.y ).toFixed(2) }
+// Z: ${ THREE.MathUtils.radToDeg( wheel.rotation.z ).toFixed(2) }    
+//         `);
+    }
+
+    getWheelSteerAngle(side: 'L'|'R'): number {
+
+        const wheel = this.getWheelModel( `F${ side }` );
+
+        let wheelAngle = 0;
+        if ( Math.abs( wheel.rotation.x ) === Math.PI ) {
+            // Upper quadrants
+            
+            if ( wheel.rotation.y < 0 ) {
+                // Left quadrant
+                wheelAngle = -1 * (THREE.MathUtils.degToRad( 180 ) + wheel.rotation.y);
+            }
+            else {
+                // Right quadrant
+                wheelAngle = THREE.MathUtils.degToRad( 180 ) - wheel.rotation.y;
+            }
+        }
+        else {
+            // Lower quadrants
+            wheelAngle = wheel.rotation.y;
+        }
+
+        if ( side === 'R' ) {
+            if ( wheelAngle < 0 )
+                wheelAngle += THREE.MathUtils.degToRad( 180 );
+            else
+                wheelAngle -= THREE.MathUtils.degToRad( 180 );
+        }
+
+        return wheelAngle;
+    }
+
+    getWheelModel(wheel: 'FL'|'FR'|'RL'|'RR'): THREE.Mesh {
+        switch (wheel) {
+            case 'FL':
+                return this.group.children[3] as THREE.Mesh;
+            case 'FR':
+                return this.group.children[4] as THREE.Mesh;
+            case 'RL':
+                return this.group.children[1] as THREE.Mesh;
+            case 'RR':
+                return this.group.children[2] as THREE.Mesh;
+        }
+    }
+ 
     showDirectionGizmo() {
 
         const line = GizmoHelper.CreateVectorGizmo(this.position, this.direction);

@@ -91,7 +91,16 @@ export class Scene {
                     this.car.isBraking = false;
             });
 
+        this.engine.eventManager.on( EVENT_TYPE.STEER )
+            .subscribe(event => {
 
+                if ( event.isPressed ) {
+                    this.car.isSteering = true;
+                    this.car.steerDirection = event.direction;
+                }
+                else
+                    this.car.isSteering = false;
+            });
 
         // interval(10).pipe(
         //     take(500)

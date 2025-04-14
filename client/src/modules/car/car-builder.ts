@@ -41,6 +41,7 @@ export class CarBuilder {
         this.car.group.add( carBodyMesh );
         
         const carWheelFLMesh = this.gltf.scene.children[1].clone();
+        carWheelFLMesh.name = 'wheel-FL';
         carWheelFLMesh.position.set( 
             0.51452,
             0.319039,
@@ -49,6 +50,7 @@ export class CarBuilder {
         this.car.group.add( carWheelFLMesh );
     
         const carWheelFRMesh = this.gltf.scene.children[1].clone();
+        carWheelFRMesh.name = 'wheel-FR';
         carWheelFRMesh.position.set( 
             -0.51452,
             0.319039,
@@ -58,6 +60,7 @@ export class CarBuilder {
         this.car.group.add( carWheelFRMesh );
     
         const carWheelRLMesh = this.gltf.scene.children[1].clone();
+        carWheelRLMesh.name = 'wheel-RL';
         carWheelRLMesh.position.set( 
             0.51452,
             0.319039,
@@ -66,6 +69,7 @@ export class CarBuilder {
         this.car.group.add( carWheelRLMesh );
     
         const carWheelRRMesh = this.gltf.scene.children[1].clone();
+        carWheelRRMesh.name = 'wheel-RR';
         carWheelRRMesh.position.set( 
             -0.51452,
             0.319039,
@@ -73,6 +77,8 @@ export class CarBuilder {
         );
         carWheelRRMesh.rotateY( THREE.MathUtils.degToRad( 180 ) );
         this.car.group.add( carWheelRRMesh );
+
+        console.log(this.car.group);
 
         return this;
     }
