@@ -27,12 +27,12 @@ export class GizmoHelper {
     }
 
     // static CreateVectorGizmo(pos: THREE.Vector3, dir: THREE.Vector3): THREE.Line {
-    static CreateVectorGizmo(start: THREE.Vector3, end: THREE.Vector3): THREE.Line {
+    static CreateVectorGizmo(start: THREE.Vector3, end: THREE.Vector3, color: number = 0xff0000): THREE.Line {
 
         const points = [ start, end ];
         const geometry = new THREE.BufferGeometry().setFromPoints( points );
 
-        const material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+        const material = new THREE.LineBasicMaterial({ color });
 
         const line = new THREE.Line( geometry, material );
 

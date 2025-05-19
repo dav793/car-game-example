@@ -238,6 +238,8 @@ export class Car {
             R: lineR
         };
 
+        this.scene.scene.add( lineL );
+        this.scene.scene.add( lineR );
     }
 
     updateWheelDirectionGizmo() {
