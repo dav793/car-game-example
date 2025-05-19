@@ -5,5 +5,6 @@ export const CONFIG = {
     ROLLING_RESISTANCE: 25.6,
     BRAKING_FORCE: 100,
     CAR_MASS: 10,
-    STEER_RATE: 0.01
+    STEER_RATE: 1.5,
+    MAX_STEER_ANGLE: 45
 } as const;

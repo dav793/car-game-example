@@ -68,7 +68,7 @@ export class Scene {
         this.car = await new CarBuilder( '/assets/models/car.glb', this ).build();
         this.scene.add( this.car.group );
 
-        this.car.showDirectionGizmo();
+        this.car.showGizmos();
 
         // this.engine.eventManager.eventStream
         //     .subscribe(event => console.log(event));

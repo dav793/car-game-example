@@ -2,10 +2,12 @@
 import * as THREE from 'three';
 
 import { CONFIG } from '../../config/config.js';
-import { GizmoHelper } from '../../shared/util/gizmo-helper.js';
+import { Util, GizmoHelper } from '../../shared/util/util.js';
 import { Scene } from '../../engine/scene.js';
 
 export class Car {
+
+    static MaxWheelAngle = THREE.MathUtils.degToRad( CONFIG.MAX_STEER_ANGLE );
 
     position: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
     direction: THREE.Vector3 = new THREE.Vector3(0, 0, 0);  // unit vector
@@ -21,13 +23,18 @@ export class Car {
 
     group: THREE.Group;
     gizmos: {
-        direction: THREE.Line
+        direction: THREE.Line,
+        wheelDirection: {
+            L: THREE.Line,
+            R: THREE.Line
+        }
     };
     scene: Scene;
 
     constructor(scene: Scene) {
         this.gizmos = {
-            direction: undefined
+            direction: undefined,
+            wheelDirection: undefined
         };
         this.scene = scene;
 
@@ -46,7 +53,7 @@ export class Car {
             this.position.z
         );
 
-        this.updateDirectionGizmo();
+        this.updateGizmos();
     }
 
     updatePhysics(elapsedTime: number) {
@@ -94,25 +101,37 @@ export class Car {
     }
 
     updateWheels(elapsedTime: number) {
-        this.updateFrontWheel('L');
-        // this.updateFrontWheel('R');
+        this.updateFrontWheel('L', elapsedTime);
+        this.updateFrontWheel('R', elapsedTime);
     }
 
-    updateFrontWheel(side: 'L'|'R') {
+    updateFrontWheel(side: 'L'|'R', elapsedTime: number) {
 
         const wheel = this.getWheelModel( `F${ side }` );
+        const currentAngle = this.getSteerAngle(wheel.rotation, side);
+        let rotationDelta: number;
 
         if ( this.isSteering ) {
-            
-            const rotation = CONFIG.STEER_RATE * (this.steerDirection === 'left' ? 1 : -1); 
-            wheel.rotateY( rotation );
 
+            const sign = (this.steerDirection === 'left' ? 1 : -1);
+            rotationDelta = CONFIG.STEER_RATE * elapsedTime * sign;
+
+            const nextAngle = currentAngle + rotationDelta;
+            if (Math.abs(nextAngle) > Car.MaxWheelAngle)    // do not exceed max steer angle
+                return;
         }
         else {
 
+            if (currentAngle === 0)
+                return;
+
+            const sign = (currentAngle > 0 ? -1 : 1);
+            rotationDelta = Math.min( CONFIG.STEER_RATE * elapsedTime, Math.abs(currentAngle) ) * sign;
         }
 
-        const wheelAngle = this.getWheelSteerAngle( side );
+        wheel.rotateY( rotationDelta );
+
+//         const wheelAngle = this.getWheelSteerAngle( side );
 //         console.log(`
 // WHEEL ANGLE: ${ THREE.MathUtils.radToDeg( wheelAngle ).toFixed(2) }
 // X: ${ THREE.MathUtils.radToDeg( wheel.rotation.x ).toFixed(2) }
@@ -122,25 +141,35 @@ export class Car {
     }
 
     getWheelSteerAngle(side: 'L'|'R'): number {
-
         const wheel = this.getWheelModel( `F${ side }` );
+        return this.getSteerAngle(wheel.rotation, side);
+    }
+
+    /**
+     * Convert the steer rotation of wheels to a range between -pi (-180 deg) and pi (180 deg) radians
+     * 
+     * @param rotation Wheel rotation
+     * @param side Side of wheel
+     * @returns The converted angle in the Y axis
+     */
+    getSteerAngle(rotation: THREE.Euler, side: 'L'|'R'): number {
 
         let wheelAngle = 0;
-        if ( Math.abs( wheel.rotation.x ) === Math.PI ) {
+        if ( Math.abs( rotation.x ) === Math.PI ) {
             // Upper quadrants
             
-            if ( wheel.rotation.y < 0 ) {
+            if ( rotation.y < 0 ) {
                 // Left quadrant
-                wheelAngle = -1 * (THREE.MathUtils.degToRad( 180 ) + wheel.rotation.y);
+                wheelAngle = -1 * (THREE.MathUtils.degToRad( 180 ) + rotation.y);
             }
             else {
                 // Right quadrant
-                wheelAngle = THREE.MathUtils.degToRad( 180 ) - wheel.rotation.y;
+                wheelAngle = THREE.MathUtils.degToRad( 180 ) - rotation.y;
             }
         }
         else {
             // Lower quadrants
-            wheelAngle = wheel.rotation.y;
+            wheelAngle = rotation.y;
         }
 
         if ( side === 'R' ) {
@@ -165,6 +194,16 @@ export class Car {
                 return this.group.children[2] as THREE.Mesh;
         }
     }
+
+    showGizmos() {
+        this.showDirectionGizmo();
+        this.showWheelDirectionGizmo();
+    }
+
+    updateGizmos() {
+        this.updateDirectionGizmo();
+        this.updateWheelDirectionGizmo();
+    }
  
     showDirectionGizmo() {
 
@@ -186,4 +225,31 @@ export class Car {
         this.gizmos.direction.geometry = geometry;
     }
 
+    showWheelDirectionGizmo() {
+
+        const wheelL = this.getWheelModel('FL');
+        const lineL = GizmoHelper.CreateVectorGizmo(wheelL.position, this.position);
+
+        const wheelR = this.getWheelModel('FR');
+        const lineR = GizmoHelper.CreateVectorGizmo(wheelR.position, this.position);
+
+        this.gizmos.wheelDirection = {
+            L: lineL,
+            R: lineR
+        };
+
+    }
+
+    updateWheelDirectionGizmo() {
+
+        const wheelL = this.getWheelModel('FL');
+        const wheelLOrigin = this.position.clone().add( wheelL.position );
+        const directionL = Util.eulerToDirectionVector( wheelL.rotation.x, wheelL.rotation.y, wheelL.rotation.z )
+
+        const wheelR = this.getWheelModel('FR');
+
+
+
+
+    }
 }
