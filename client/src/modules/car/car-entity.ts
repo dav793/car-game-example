@@ -228,10 +228,10 @@ export class Car {
     showWheelDirectionGizmo() {
 
         const wheelL = this.getWheelModel('FL');
-        const lineL = GizmoHelper.CreateVectorGizmo(wheelL.position, this.position);
+        const lineL = GizmoHelper.CreateVectorGizmo(wheelL.position, this.position, 0x0000ff);
 
         const wheelR = this.getWheelModel('FR');
-        const lineR = GizmoHelper.CreateVectorGizmo(wheelR.position, this.position);
+        const lineR = GizmoHelper.CreateVectorGizmo(wheelR.position, this.position, 0x0000ff);
 
         this.gizmos.wheelDirection = {
             L: lineL,
@@ -246,12 +246,22 @@ export class Car {
 
         const wheelL = this.getWheelModel('FL');
         const wheelLOrigin = this.position.clone().add( wheelL.position );
-        const directionL = Util.eulerToDirectionVector( wheelL.rotation.x, wheelL.rotation.y, wheelL.rotation.z )
+        const directionL = Util.eulerToDirectionVector( wheelL.rotation.x, wheelL.rotation.y, wheelL.rotation.z );  // directionL is a unit vector
+
+        const geometryL = new THREE.BufferGeometry().setFromPoints([ 
+            wheelLOrigin, 
+            new THREE.Vector3().addVectors( wheelLOrigin, directionL )
+        ]);
+        this.gizmos.wheelDirection.L.geometry = geometryL;
 
         const wheelR = this.getWheelModel('FR');
+        const wheelROrigin = this.position.clone().add( wheelR.position );
+        const directionR = Util.eulerToDirectionVector( wheelR.rotation.x, wheelR.rotation.y, wheelR.rotation.z );  // directionR is a unit vector
 
-
-
-
+        const geometryR = new THREE.BufferGeometry().setFromPoints([ 
+            wheelROrigin, 
+            new THREE.Vector3().addVectors( wheelROrigin, directionR.negate() )
+        ]);
+        this.gizmos.wheelDirection.R.geometry = geometryR;
     }
 }
