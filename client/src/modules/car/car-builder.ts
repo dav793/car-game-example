@@ -78,8 +78,6 @@ export class CarBuilder {
         carWheelRRMesh.rotateY( THREE.MathUtils.degToRad( 180 ) );
         this.car.group.add( carWheelRRMesh );
 
-        console.log(this.car.group);
-
         return this;
     }
 

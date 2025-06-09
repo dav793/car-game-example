@@ -72,6 +72,26 @@ export class Car {
             this.velocity.clone().multiplyScalar( elapsedTime )
         );
 
+        // STEERING
+        const wheelL = this.getWheelModel('FL');
+        const steerAngle = wheelL.rotation.y;
+        const speed = this.velocity.length();
+        
+        // const angularVelocity = this.isBraking ? -1 * 1 : speed * Math.sin(steerAngle) / CONFIG.WHEEL_BASE;
+        const angularVelocity = speed * Math.sin(steerAngle) / CONFIG.WHEEL_BASE;
+        const rotationDelta = angularVelocity * elapsedTime;
+
+        // apply rotation onto car model
+        this.group.rotateY(rotationDelta);
+
+        // update direction to point in new car direction
+        this.direction = Util.eulerToDirectionVector(
+            this.group.rotation.x, 
+            this.group.rotation.y, 
+            this.group.rotation.z
+        );
+
+        // console.log(rotationDelta);
     }
 
     updateLongitudinalForce() {
