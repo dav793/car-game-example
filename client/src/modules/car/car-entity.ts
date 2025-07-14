@@ -67,7 +67,8 @@ export class Car {
         this.velocity.add(
             this.acceleration.clone().multiplyScalar( elapsedTime )
         );
-
+        // console.log(this.velocity.length());
+    
         this.position.add(
             this.velocity.clone().multiplyScalar( elapsedTime )
         );
@@ -76,9 +77,13 @@ export class Car {
         const wheelL = this.getWheelModel('FL');
         const steerAngle = wheelL.rotation.y;
         const speed = this.velocity.length();
-        
+
+        const forwardDirection = this.direction.clone().normalize();
+        const velocityDirection = this.velocity.clone().normalize();
+        const isMovingForward = forwardDirection.dot(velocityDirection) > 0;
+
         // const angularVelocity = this.isBraking ? -1 * 1 : speed * Math.sin(steerAngle) / CONFIG.WHEEL_BASE;
-        const angularVelocity = speed * Math.sin(steerAngle) / CONFIG.WHEEL_BASE;
+        const angularVelocity = speed * Math.sin(steerAngle) * (isMovingForward ? 1 : -1) / CONFIG.WHEEL_BASE;
         const rotationDelta = angularVelocity * elapsedTime;
 
         // apply rotation onto car model
@@ -113,9 +118,18 @@ export class Car {
             -CONFIG.DRAG * this.velocity.length()
         );
         
+        const decay = 1/(Math.pow(CONFIG.ROLLING_RESISTANCE, this.velocity.length() * CONFIG.ROLLING_RESISTANCE_DECAY));
         const fRollingResistance = this.velocity.clone().multiplyScalar(
-            -CONFIG.ROLLING_RESISTANCE
+            -CONFIG.ROLLING_RESISTANCE * decay
         );
+
+        // const fRollingResistance = this.velocity.clone().multiplyScalar(
+        //     -CONFIG.ROLLING_RESISTANCE * ( this.velocity.length() ? 1 / this.velocity.length() : 1 )
+        // );
+        // const fRollingResistance = this.velocity.clone().multiplyScalar(
+        //     -CONFIG.ROLLING_RESISTANCE
+        // );
+        // console.log(fRollingResistance.length());
 
         this.longitudinalForce = fTraction.clone().add( fDrag ).add( fRollingResistance );
     }
